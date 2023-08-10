@@ -14,7 +14,7 @@ def sanitize_console_name(name):
 # Function to extract the year from the game title using regular expressions
 def extract_year_from_title(year):
     pattern = r"\((\d{4})"  # Regular expression to match "(year" pattern
-    match = re.search(pattern, year)
+    match = re.search(pattern, year) #Search for the defined pattern
     if match:
         return match.group(1)  # Return the first four digits (the year)
     return None
@@ -27,7 +27,7 @@ def clean_game_title(game_title):
     title2 = title.split(" (")[0]
     return title2.strip()
 
-# Fetch the HTML content of the page
+# Fetch the HTML content of the page with a GET request
 url = "https://nintendo.fandom.com/wiki/List_of_Mario_games"
 response = requests.get(url)
 html_content = response.text
@@ -35,31 +35,30 @@ html_content = response.text
 # Parse the HTML content using BeautifulSoup
 soup = BeautifulSoup(html_content, "html.parser")
 
-# Find the main content area where consoles and games are listed
+# Find the main content area where consoles and games are listed. .find() is used to search through the webpage
+# On the page <div class="mw-parser-output"> is where the content is stored that we need to look into.
 content_area = soup.find("div", class_="mw-parser-output")
 
 # Initialize a dictionary to store the console names and their respective games
 console_games = {}
 
-# Loop through each element in the content area
-current_console = None
+# Loop through each element in the content area. .children accesses the chid elements of the HTML code
 for element in content_area.children:
     # Check if the element is a console name (subheading)
-    if element.name == "h2":
-       current_console = element.text.strip()
-       #Stops the script at "See also" part of the website.
+    if element.name == "h2": #In the HTML for the page h2 is where the console names are located.
+       current_console = element.text.strip() #Used to remove any leading or trailing whitespace.
+       #Stops the script at "See also" part of the website. This keeps "See also" as well as "List of best-selling Mario games" from being added
        if current_console.startswith("See also"):
             break
        # Sanitize the console name to create a valid table name
        table_name = sanitize_console_name(current_console)
        console_games[table_name] = []
-            
+        #Checks for ul in the HTML code and also sees if theres a valid "current_console"    
     elif element.name == "ul" and current_console:
         # If the element is an unordered list and we have a current console
-        # Then, it contains the games for the current console
         games = element.find_all("li")
-        #Creates an array of tuples
         games_list = []
+         #reiterate through to find games
         for game in games:
             game_name = game.text.strip()
             game_year = extract_year_from_title(game_name)
